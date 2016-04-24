@@ -2,3 +2,9 @@
 *.d
 *.a
 *.dSYM/
+
+test/phonebook/phonebook_*
+test/phonebook/calculate
+test/phonebook/*.png
+test/phonebook/*.gch
+test/phonebook/*.txt
