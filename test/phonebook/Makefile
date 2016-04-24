@@ -1,9 +1,9 @@
 CC ?= gcc
-CFLAGS_common ?= -Wall -std=gnu99
+CFLAGS_common ?= -Wall -std=gnu99 -DDEBUG -g
 CFLAGS_orig = -O0
 CFLAGS_opt  = -O0
 
-EXEC = phonebook_orig phonebook_opt phonebook_hash phonebook_trie phonebook_rbtree phonebook_bptree
+EXEC = phonebook_orig phonebook_opt phonebook_hash phonebook_trie phonebook_rbtree phonebook_bptree phonebook_bptree_bulk
 all: $(EXEC)
 
 SRCS_common = main.c memory_pool.c
@@ -35,8 +35,14 @@ phonebook_rbtree: $(SRCS_common) phonebook_rbtree.c phonebook_rbtree.h
 
 phonebook_bptree: $(SRCS_common) ../../bplus.a
 	$(CXX) -Wall $(CFLAGS_opt) \
-		-I../../include -lpthread \
+		-I../../include -pthread \
 		 -DIMPL="\"phonebook_orig.h\"" -DBPTREE -o $@ \
+		$(SRCS_common) ../../bplus.a
+
+phonebook_bptree_bulk: $(SRCS_common) ../../bplus.a
+	$(CXX) -Wall $(CFLAGS_opt) \
+		-I../../include -pthread \
+		 -DIMPL="\"phonebook_orig.h\"" -DBPTREE_BULK -o $@ \
 		$(SRCS_common) ../../bplus.a
 
 ../../bplus.a:
@@ -62,9 +68,12 @@ cache-test: $(EXEC)
 	perf stat --repeat 100 \
 		-e cache-misses,cache-references,instructions,cycles \
 		./phonebook_rbtree
-	perf stat --repeat 100 \
+	perf stat --repeat 10 \
 		-e cache-misses,cache-references,instructions,cycles \
 		./phonebook_bptree
+	perf stat --repeat 10 \
+		-e cache-misses,cache-references,instructions,cycles \
+		./phonebook_bptree_bulk
 
 output.txt: cache-test calculate
 	./calculate
@@ -78,4 +87,4 @@ calculate: calculate.c
 .PHONY: clean
 clean:
 	$(RM) $(EXEC) *.o perf.* \
-	      	calculate bptree.txt rbtree.txt trie.txt hash.txt orig.txt opt.txt output.txt runtime.png
+	      	calculate bptree.txt rbtree.txt bptree.txt bptree_bulk.txt trie.txt hash.txt orig.txt opt.txt output.txt runtime.png

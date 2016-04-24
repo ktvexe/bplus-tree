@@ -5,7 +5,7 @@
 #include <assert.h>
 
 #include IMPL
-#if defined(BPTREE)
+#if defined(BPTREE)||defined (BPTREE_BULK)
 #include <unistd.h>
 #include "bplus.h"
 #endif
@@ -32,11 +32,12 @@ static double diff_in_second(struct timespec t1, struct timespec t2)
 int main(int argc, char *argv[])
 {
     FILE *fp;
-    int i = 0;
+    int i = 0,bulk_size=0;
+	 const int delta = 20000;
     char line[MAX_LAST_NAME_SIZE];
+	 char *line_bulk[20000];
     struct timespec start, end;
     double cpu_time1, cpu_time2;
-
     /* check file opening */
     fp = fopen(DICT_FILE, "r");
     if (fp == NULL) {
@@ -47,12 +48,12 @@ int main(int argc, char *argv[])
     /* initialize memory pool */
 #if defined(TRIE)
     init_memory_pool(sizeof(entry) * 350000 * 13);
-#elif !defined(BPTREE)
+#elif !defined(BPTREE)&&!defined(BPTREE_BULK)
     init_memory_pool(sizeof(entry) * 350000);
 #endif
 
     /* build the entry */
-#if defined(BPTREE)
+#if defined(BPTREE)||defined(BPTREE_BULK)
     if (access("/tmp/bp_tree.bp", F_OK) == 0) {
         assert(unlink("/tmp/bp_tree.bp") == 0);
     }
@@ -73,7 +74,7 @@ int main(int argc, char *argv[])
 #elif defined(RBTREE)
     entry *pHead = NULL;
     printf("size of entry : %lu bytes\n", sizeof(entry));
-#elif !defined(BPTREE)
+#elif !defined(BPTREE)|| !defined(BPTREE_BULK)
     entry *pHead, *e;
     pHead = (entry *) malloc(sizeof(entry));
     printf("size of entry : %lu bytes\n", sizeof(entry));
@@ -84,7 +85,7 @@ int main(int argc, char *argv[])
 #if defined(__GNUC__)
 #if defined(HASH)
     __builtin___clear_cache((char *) pHead, (char *) pHead + TABLE_SIZE * sizeof(entry));
-#elif !defined(RBTREE) && !defined(BPTREE)
+#elif !defined(RBTREE) && !defined(BPTREE) &&!defined(BPTREE_BULK)
     __builtin___clear_cache((char *) pHead, (char *) pHead + sizeof(entry));
 #endif
 #endif
@@ -96,6 +97,17 @@ int main(int argc, char *argv[])
         i = 0;
 #if defined(BPTREE)
         bp_sets(&db, line, line);
+#elif defined(BPTREE_BULK)
+		  line_bulk[bulk_size]=(char*)malloc(sizeof(char)*16);
+		  strcpy(line_bulk[bulk_size],line);
+		  bulk_size++;
+		  if(bulk_size==20000){
+	 	  		bp_bulk_sets(&db,
+		              		 delta,
+		              		 (const char**) line_bulk ,
+		              		 (const char**) line_bulk );
+		  		bulk_size = 0;
+		  }
 #elif defined(HASH)
         unsigned int hash_index = hashfunction(line) % TABLE_SIZE;
         e[hash_index] = append(line, e[hash_index]);
@@ -107,6 +119,16 @@ int main(int argc, char *argv[])
         e = append(line, e);
 #endif
     }
+
+#if defined(BPTREE_BULK)
+		  if(bulk_size !=0){
+	 	  		bp_bulk_sets(&db,
+		              		 bulk_size,
+		              		 (const char**) line_bulk ,
+		              		 (const char**) line_bulk );
+				
+		  }
+#endif	 
     clock_gettime(CLOCK_REALTIME, &end);
     cpu_time1 = diff_in_second(start, end);
 
@@ -117,7 +139,7 @@ int main(int argc, char *argv[])
     for (i = 0; i < TABLE_SIZE; ++i) {
         e[i] = &pHead[i];
     }
-#elif !defined(TRIE) && !defined(RBTREE) && !defined(BPTREE)
+#elif !defined(TRIE) && !defined(RBTREE) && !defined(BPTREE) &&!defined(BPTREE_BULK)
     e = pHead;
 #endif
 
@@ -125,6 +147,11 @@ int main(int argc, char *argv[])
     char input[MAX_LAST_NAME_SIZE] = "zyxel";
 
 #if defined(BPTREE)
+    char *foundName;
+    assert(bp_gets(&db, input, &foundName) == BP_OK);
+    assert(0 == strcmp(foundName, "zyxel"));
+    free(foundName);
+#elif defined(BPTREE_BULK)
     char *foundName;
     assert(bp_gets(&db, input, &foundName) == BP_OK);
     assert(0 == strcmp(foundName, "zyxel"));
@@ -153,13 +180,13 @@ int main(int argc, char *argv[])
 #if defined(__GNUC__)
 #if defined(HASH)
     __builtin___clear_cache((char *) pHead, (char *) pHead + TABLE_SIZE * sizeof(entry));
-#elif !defined(BPTREE)
+#elif !defined(BPTREE)&&!defined(BPTREE_BULK)
     __builtin___clear_cache((char *) pHead, (char *) pHead + sizeof(entry));
 #endif
 #endif
     /* compute the execution time */
     clock_gettime(CLOCK_REALTIME, &start);
-#if defined(BPTREE)
+#if defined(BPTREE)||defined(BPTREE_BULK)
     bp_gets(&db, input, &foundName);
 #elif defined(HASH)
     findName(input, e[hash_index]);
@@ -174,6 +201,8 @@ int main(int argc, char *argv[])
     FILE *output;
 #if defined(BPTREE)
     output = fopen("bptree.txt", "a");
+#elif defined(BPTREE_BLUK)
+    output = fopen("bptree_bulk.txt", "a");
 #elif defined(OPT)
     output = fopen("opt.txt", "a");
 #elif defined(HASH)
@@ -191,7 +220,7 @@ int main(int argc, char *argv[])
     printf("execution time of append() : %lf sec\n", cpu_time1);
     printf("execution time of findName() : %lf sec\n", cpu_time2);
 
-#if defined(BPTREE)
+#if defined(BPTREE)||defined(BPTREE_BULK)
     assert(bp_close(&db) == BP_OK);
 
     if (access("/tmp/bp_tree.bp", F_OK) == 0) {
@@ -200,7 +229,7 @@ int main(int argc, char *argv[])
 #else
     free_memory_pool();
 #endif
-#if !defined(HASH) && !defined(RBTREE) && !defined(BPTREE)
+#if !defined(HASH) && !defined(RBTREE) && !defined(BPTREE) && !defined(BPTREE_BULK)
     free(pHead);
 #endif
 
