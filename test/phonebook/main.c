@@ -11,15 +11,14 @@
 #include <unistd.h>
 #include "bplus.h"
 #include "memory_pool.h"
-=======
-*/
+=======*/
 #if defined(BPTREE) || defined (BPTREE_BULK)
 #include <unistd.h>
 #include "bplus.h"
 
 #define BP_FILE   "/tmp/bp_tree.bp"
 #define BULK_SIZE 20000
-//>>>>>>> upstream2/master
+//>>>>>>> upstream2/master*/
 #endif
 
 #define DICT_FILE "./dictionary/words.txt"
