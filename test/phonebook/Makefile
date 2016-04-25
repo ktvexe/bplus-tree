@@ -1,7 +1,11 @@
 CC ?= gcc
-CFLAGS_common ?= -Wall -std=gnu99 -DDEBUG -g
+CFLAGS_common ?= -Wall -std=gnu99 -g
+CPPFLAGS_common ?= -I../../include -Wall -g
 CFLAGS_orig = -O0
 CFLAGS_opt  = -O0
+
+MODE ?= debug
+SNAPPY ?= 0
 
 EXEC = phonebook_orig phonebook_opt phonebook_hash phonebook_trie phonebook_rbtree phonebook_bptree phonebook_bptree_bulk
 all: $(EXEC)
@@ -34,19 +38,25 @@ phonebook_rbtree: $(SRCS_common) phonebook_rbtree.c phonebook_rbtree.h
 		$(SRCS_common) $@.c
 
 phonebook_bptree: $(SRCS_common) ../../bplus.a
-	$(CXX) -Wall $(CFLAGS_opt) \
-		-I../../include -pthread \
-		 -DIMPL="\"phonebook_orig.h\"" -DBPTREE -o $@ \
-		$(SRCS_common) ../../bplus.a
+	$(CXX) $(CPPFLAGS_common) $(CFLAGS_opt) \
+		-DIMPL="\"phonebook_orig.h\"" -DBPTREE -o $@ \
+		$(SRCS_common) ../../bplus.a -lpthread
 
-phonebook_bptree_bulk: $(SRCS_common) ../../bplus.a 
-	$(CXX) -Wall -lm $(CFLAGS_opt) \
+#<<<<<<< HEAD
+#phonebook_bptree_bulk: $(SRCS_common) ../../bplus.a 
+#	$(CXX) -Wall -lm $(CFLAGS_opt) \
 		-I../../include -pthread \
 		 -DIMPL="\"phonebook_orig.h\"" -DBPTREE_BULK -o $@ \
 		$(SRCS_common) ../../bplus.a 
+#=======
+phonebook_bptree_bulk: $(SRCS_common) ../../bplus.a
+	$(CXX) $(CPPFLAGS_common) $(CFLAGS_opt) \
+		-DIMPL="\"phonebook_orig.h\"" -DBPTREE_BULK -o $@ \
+		$(SRCS_common) ../../bplus.a -lpthread
+#>>>>>>> upstream2/master
 
 ../../bplus.a:
-	@make -C ../.. MODE=release
+	$(MAKE) -C ../.. MODE=$(MODE) SNAPPY=$(SNAPPY)
 
 run: $(EXEC)
 	echo 3 | sudo tee /proc/sys/vm/drop_caches
@@ -87,4 +97,5 @@ calculate: calculate.c
 .PHONY: clean
 clean:
 	$(RM) $(EXEC) *.o perf.* \
-	      	calculate bptree.txt rbtree.txt bptree.txt bptree_bulk.txt trie.txt hash.txt orig.txt opt.txt output.txt runtime.png
+	      	calculate rbtree.txt bptree.txt bptree_bulk.txt trie.txt hash.txt orig.txt opt.txt output.txt runtime.png
+	$(MAKE) -C ../.. clean

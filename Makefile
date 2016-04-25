@@ -65,6 +65,9 @@ TESTS += test/bench-basic
 TESTS += test/bench-bulk
 TESTS += test/bench-multithread-get
 
+rebuild: clean $(TESTS)
+
+
 check: $(TESTS)
 	@test/test-api
 	@test/test-reopen
