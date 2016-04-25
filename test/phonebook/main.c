@@ -5,9 +5,11 @@
 #include <assert.h>
 
 #include IMPL
+
 #if defined(BPTREE)||defined (BPTREE_BULK)
 #include <unistd.h>
 #include "bplus.h"
+#include "memory_pool.h"
 #endif
 
 #define DICT_FILE "./dictionary/words.txt"
@@ -32,11 +34,14 @@ static double diff_in_second(struct timespec t1, struct timespec t2)
 int main(int argc, char *argv[])
 {
     FILE *fp;
-    int i = 0,bulk_size=0;
-	 const int delta = 20000;
+    int i = 0;
     char line[MAX_LAST_NAME_SIZE];
+#if defined (BPTREE_BULK) 	 
+	 int bulk_size=0;
+	 const int delta = 20000;
 	 char *line_bulk[20000];
-    struct timespec start, end;
+#endif
+	 struct timespec start, end;
     double cpu_time1, cpu_time2;
     /* check file opening */
     fp = fopen(DICT_FILE, "r");
@@ -50,6 +55,8 @@ int main(int argc, char *argv[])
     init_memory_pool(sizeof(entry) * 350000 * 13);
 #elif !defined(BPTREE)&&!defined(BPTREE_BULK)
     init_memory_pool(sizeof(entry) * 350000);
+#elif defined(BPTREE_BULK)
+    //init_memory_pool(pool,sizeof(char) * 16*20000);
 #endif
 
     /* build the entry */
@@ -201,7 +208,7 @@ int main(int argc, char *argv[])
     FILE *output;
 #if defined(BPTREE)
     output = fopen("bptree.txt", "a");
-#elif defined(BPTREE_BLUK)
+#elif defined(BPTREE_BULK)
     output = fopen("bptree_bulk.txt", "a");
 #elif defined(OPT)
     output = fopen("opt.txt", "a");
