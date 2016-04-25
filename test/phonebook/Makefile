@@ -39,8 +39,8 @@ phonebook_rbtree: $(SRCS_common) phonebook_rbtree.c phonebook_rbtree.h
 
 phonebook_bptree: $(SRCS_common) ../../bplus.a
 	$(CXX) $(CPPFLAGS_common) $(CFLAGS_opt) \
-		-DIMPL="\"phonebook_orig.h\"" -DBPTREE -o $@ \
-		$(SRCS_common) ../../bplus.a -lpthread
+		-DIMPL="\"phonebook_orig.h\"" -DBPTREE -pthread -o $@ \
+		$(SRCS_common) ../../bplus.a 
 
 #<<<<<<< HEAD
 #phonebook_bptree_bulk: $(SRCS_common) ../../bplus.a 
@@ -51,8 +51,8 @@ phonebook_bptree: $(SRCS_common) ../../bplus.a
 #=======
 phonebook_bptree_bulk: $(SRCS_common) ../../bplus.a
 	$(CXX) $(CPPFLAGS_common) $(CFLAGS_opt) \
-		-DIMPL="\"phonebook_orig.h\"" -DBPTREE_BULK -o $@ \
-		$(SRCS_common) ../../bplus.a -lpthread
+		-DIMPL="\"phonebook_orig.h\"" -DBPTREE_BULK -pthread -o $@ \
+		$(SRCS_common) ../../bplus.a 
 #>>>>>>> upstream2/master
 
 ../../bplus.a:
