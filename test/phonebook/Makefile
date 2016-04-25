@@ -39,11 +39,11 @@ phonebook_bptree: $(SRCS_common) ../../bplus.a
 		 -DIMPL="\"phonebook_orig.h\"" -DBPTREE -o $@ \
 		$(SRCS_common) ../../bplus.a
 
-phonebook_bptree_bulk: $(SRCS_common) ../../bplus.a
-	$(CXX) -Wall $(CFLAGS_opt) \
+phonebook_bptree_bulk: $(SRCS_common) ../../bplus.a 
+	$(CXX) -Wall -lm $(CFLAGS_opt) \
 		-I../../include -pthread \
 		 -DIMPL="\"phonebook_orig.h\"" -DBPTREE_BULK -o $@ \
-		$(SRCS_common) ../../bplus.a
+		$(SRCS_common) ../../bplus.a 
 
 ../../bplus.a:
 	@make -C ../.. MODE=release
