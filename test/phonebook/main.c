@@ -209,7 +209,7 @@ int main(int argc, char *argv[])
     FILE *output;
 #if defined(BPTREE)
     output = fopen("bptree.txt", "a");
-#elif defined(BPTREE_BLUK)
+#elif defined(BPTREE_BULK)
     output = fopen("bptree_bulk.txt", "a");
 #elif defined(OPT)
     output = fopen("opt.txt", "a");
